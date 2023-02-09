@@ -10,6 +10,8 @@ class RecorderProcessor extends AudioWorkletProcessor {
     // 2. Create a buffer of fixed size
     _buffer = new Float32Array(this.bufferSize)
     
+    logged = false
+
     constructor() {
       super()
       this.initBuffer()
@@ -33,6 +35,7 @@ class RecorderProcessor extends AudioWorkletProcessor {
      */
     process(inputs) {
       // Grabbing the 1st channel similar to ScriptProcessorNode
+
       this.append(inputs[0][0])
   
       return true

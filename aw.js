@@ -1,4 +1,7 @@
-const context = new AudioContext();
+const context = new AudioContext({
+  latencyHint: "interactive",
+  sampleRate: 16000
+});
 
 function aw() {
   this.started = true;
@@ -13,6 +16,8 @@ aw.prototype.record = async function () {
   });
 
   const source = context.createMediaStreamSource(microphone);
+
+  console.log('zzzzzzz, mic', source)
 
   // NEW A: Loading the worklet processor
   await context.audioWorklet.addModule("/recorder.worklet.js");
@@ -29,15 +34,17 @@ aw.prototype.record = async function () {
 
   recorder.port.onmessage = (e) => {
     saveBuffers.push(e.data);
-    if (count > 100) {
+    if (count > 10) {
       console.log(e);
+      console.log('zzzzzzzz data len',e.data.length)
       console.log("disonnecting");
       source.disconnect();
       processData(saveBuffers);
     }
     count++;
-    //console.log(count);
   };
+
+
   function Float32Concat(first, second) {
     var firstLength = first.length;
     result = new Float32Array(firstLength + second.length);
