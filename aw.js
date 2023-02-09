@@ -36,7 +36,7 @@ aw.prototype.record = async function () {
       processData(saveBuffers);
     }
     count++;
-    console.log(count);
+    //console.log(count);
   };
   function Float32Concat(first, second) {
     var firstLength = first.length;
@@ -56,7 +56,8 @@ aw.prototype.record = async function () {
 
     context.resume();
     const rb = context.createBuffer(1, buffer.length, context.sampleRate);
-
+    rb.copyToChannel(buffer, 0, 0);
+    
     // Try to create WAV file from data:
     blob = bufferToWave(rb, buffer.length);
 
@@ -68,7 +69,7 @@ aw.prototype.record = async function () {
     a.download = "abc.wav";
     a.click();
 
-    rb.copyToChannel(buffer, 0, 0);
+ 
     let result2 = context.createBufferSource();
     result2.buffer = rb;
     result2.connect(context.destination);
@@ -79,7 +80,7 @@ aw.prototype.record = async function () {
 
 // Convert an AudioBuffer to a Blob using WAVE representation
 function bufferToWave(abuffer, len) {
-  var numOfChan = abuffer.numberOfChannels,
+  var numOfChan = 1, //abuffer.numberOfChannels,
     length = len * numOfChan * 2 + 44,
     buffer = new ArrayBuffer(length),
     view = new DataView(buffer),
@@ -89,6 +90,7 @@ function bufferToWave(abuffer, len) {
     offset = 0,
     pos = 0;
 
+    console.log('wav file',abuffer, len, length)
   // write WAVE header
   setUint32(0x46464952); // "RIFF"
   setUint32(length - 8); // file length - 8
@@ -107,20 +109,30 @@ function bufferToWave(abuffer, len) {
   setUint32(length - pos - 4); // chunk length
 
   // write interleaved data
-  for (i = 0; i < abuffer.numberOfChannels; i++)
-    channels.push(abuffer.getChannelData(i));
+  //for (i = 0; i < abuffer.numberOfChannels; i++)
+  //  channels.push(abuffer.getChannelData(i));
 
+  const ch = abuffer.getChannelData(0)
+
+  //console.log(channels)
+
+  let sum = 0
   while (pos < length) {
     for (i = 0; i < numOfChan; i++) {
       // interleave channels
-      sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
+      //sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
+  
+      sample = Math.max(-1, Math.min(1, ch[offset])); 
+      sum += ch[offset]
       sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0; // scale to 16-bit signed int
+      
       view.setInt16(pos, sample, true); // write 16-bit sample
       pos += 2;
     }
     offset++; // next source sample
   }
-  ``;
+  
+  console.log('sum',sum)
 
   // create Blob
   return new Blob([buffer], { type: "audio/wav" });
